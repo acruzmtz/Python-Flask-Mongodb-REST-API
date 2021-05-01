@@ -12,7 +12,9 @@ mongo = PyMongo(app)
 
 @app.route('/users', methods=["POST"])
 def users():
-    """ this function is to create new users using POST method """
+    """ this function is to create new users using POST method and returns the id, username, email and password of the user
+    created """
+
     if request.method == "POST":
         username = request.json.get("username")
         email = request.json.get("email")
@@ -42,19 +44,25 @@ def users():
 
 @app.route('/users', methods=['GET'])
 def get_users():
+    """ this function returns all users in the database or returns a message if there are no users """
+
     users = mongo.db.users.find()
     response = json_util.dumps(users)
 
+    if response == '[]':
+        return jsonify({"message": "Not users yet"})
 
     return Response(response, mimetype="application/json")
 
 
 @app.route('/users/<oid>', methods=['GET'])
 def get_users_by_oid(oid):
+    """ this function search for a user by id, returns the user if it exists or returns an error message """
+
     user = mongo.db.users.find_one({"_id": ObjectId(oid)})
 
     if not user:
-        return jsonify({'message': "User not found"})
+        return "User not found"
 
     response = json_util.dumps(user)
 
@@ -63,6 +71,8 @@ def get_users_by_oid(oid):
 
 @app.route('/users/<id>', methods=['DELETE'])
 def delete_user(id):
+    """ this function is to remove the user by id and return the id of the user or an error if the user does not exist """
+
     user_exists = get_users_by_oid(id)
 
     if user_exists == "User not found":
@@ -77,8 +87,10 @@ def delete_user(id):
 
 @app.route('/users/<id>', methods=['PUT'])
 def update_user(id):
+    """ this function is to update the user by id and return an error message if the user does not exist """
+
     user_exists = get_users_by_oid(id)
-    print(user_exists)
+
     if user_exists == "User not found":
         return jsonify({"message": "User not exist"})
 
